@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema({
     },
     is_varified: {
         type:Boolean,
-        required: true
     },
 })
 

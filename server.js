@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 import express from "express";
-import userRoute from "./routes/userRoute.js"
+import userRoute from "./routes/userRoute.js";
+import dotenv from "dotenv";
 
-mongoose.connect("mongodb+srv://tahsin:tahsiein@cluster0.eox5kn5.mongodb.net/user-management")
+dotenv.config();
+
+mongoose
+  .connect(
+    `mongodb+srv://tahsin:${process.env.ATLAS_PASSWORD}@cluster0.eox5kn5.mongodb.net/user-management`
+  )
   .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log("MongoDB connection error:", err));
+  .catch((err) => console.log("MongoDB connection error:", err));
 
 const app = express();
 

@@ -1,35 +1,49 @@
-import User from "../models/userModel.js"
+import User from "../models/userModel.js";
+import bcrypt from "bcryptjs";
 
-const loadRegister = async(req, res) => {
-    try {
-        res.render('registration')
-    } catch (error) {
-        console.log(error.message)
-    }
-}
+const hashPassword = async (password) => {
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return hashedPassword;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const loadRegister = async (req, res) => {
+  try {
+    res.render("registration");
+  } catch (error) {
+    console.log(error.message);
+  }
+};
 
 const insertUser = async (req, res) => {
-    try {
-        const user = new User({
-            name: req.body.name,
-            email: req.body.email,
-            mobile: req.body.phone,
-            image: req.body.filename,
-            password: req.body.password,
-            is_admin: false,
-        });
+  try {
+    const { name, email, phone, password } = req.body;
+    const { filename } = req.file;
+    
+    const hashedPassword = await hashPassword(password);
 
-        const userData = await user.save();
+    const user = new User({
+      name: name,
+      email: email,
+      mobile: phone,
+      image: filename,
+      password: hashedPassword,
+      is_admin: false,
+    });
 
-        if(userData){
-            res.render("registration", {message: "Registration successful."})
-        }
-        else {
-            res.render("registration", {message: "Registration Unsuccessful."})
-        }
-    } catch (error) {
-        console.log(error)
+    const userData = await user.save();
+
+    if (userData) {
+      res.render("registration", { message: "Registration successful." });
+    } else {
+      res.render("registration", { message: "Registration Unsuccessful." });
     }
-}
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-export { loadRegister, insertUser }
+export { loadRegister, insertUser };
