@@ -1,5 +1,6 @@
-import User from "../models/userModel.js";
+import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 
 const hashPassword = async (password) => {
   try {
@@ -10,6 +11,57 @@ const hashPassword = async (password) => {
   }
 };
 
+// For Email verification
+const sendVerifyMail = async (name, email, user_id) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: "tahsin3194@gmail.com",
+        pass: "mxoz gnxc bttt kxya",
+      },
+    });
+    const mailOptions = {
+      from: "tahsin3194@gmail.com",
+      to: email,
+      subject: "For Verification Mail",
+      html:
+        "<p>Hi " +
+        name +
+        '! Please click here to verify your mail: <a href="http://localhost:3000/verify?id=' +
+        user_id +
+        '">Verify</a></p>',
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email has been sent: ", info.response);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const verifyMail = async (req, res) => {
+  try {
+    const updateInfo = await User.updateOne(
+      { _id: req.query.id },
+      { $set: { is_verified: true } }
+    );
+    console.log(updateInfo);
+    res.render("email-verified");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// For Sign Up
 const loadRegister = async (req, res) => {
   try {
     res.render("registration");
@@ -22,7 +74,7 @@ const insertUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
     const { filename } = req.file;
-    
+
     const hashedPassword = await hashPassword(password);
 
     const user = new User({
@@ -32,12 +84,14 @@ const insertUser = async (req, res) => {
       image: filename,
       password: hashedPassword,
       is_admin: false,
+      is_verified: false,
     });
 
     const userData = await user.save();
 
     if (userData) {
-      res.render("registration", { message: "Registration successful." });
+      sendVerifyMail(name, email, userData._id);
+      res.redirect("login");
     } else {
       res.render("registration", { message: "Registration Unsuccessful." });
     }
@@ -46,4 +100,57 @@ const insertUser = async (req, res) => {
   }
 };
 
-export { loadRegister, insertUser };
+// For Sign In
+const loadSignIn = async (req, res) => {
+  try {
+    res.render("login");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const verifySignIn = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (isPasswordCorrect) {
+        if (user.is_verified) {
+          req.session.user_id = user._id;
+          return res.redirect("/home");
+        } else {
+          return res.render("login", { message: "Verify your email" });
+        }
+      } else {
+        return res.render("login", {
+          message: "Email or password is incorrect",
+        });
+      }
+    } else {
+      return res.render("login", { message: "User does not exist" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Home
+
+const loadHome = async (req, res) => {
+  try {
+    res.render("home");
+  } catch (error) {
+    console.log(error);
+  }
+};
+export {
+  loadRegister,
+  loadSignIn,
+  loadHome,
+  verifySignIn,
+  insertUser,
+  verifyMail,
+};

@@ -25,9 +25,9 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         required: true
     },
-    is_varified: {
+    is_verified: {
         type:Boolean,
     },
 })
 
-export default mongoose.model('User', userSchema)
+export const User = mongoose.model('User', userSchema)

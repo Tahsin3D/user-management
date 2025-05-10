@@ -1,0 +1,17 @@
+<% include("../header.ejs") %>
+
+<h1>Login</h1>
+
+<% if(typeof message !== 'undefined') { %>
+    <h4><%= message %></h4>
+<% } %>
+
+<form action="/login" method="post" style="gap: 4px; display: flex; flex-direction: column; width: fit-content;">
+  <input type="email" name="email" required placeholder="Enter email" />
+  <br />
+  <input type="password" required name="password" placeholder="Enter password" />
+  <br />
+  <input type="submit" value="Login" />
+</form>
+
+<% include("../footer.ejs") %>
