@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     is_verified: {
         type:Boolean,
     },
+    token: {
+        type: String,
+        default: ''
+    }
 })
 
 export const User = mongoose.model('User', userSchema)

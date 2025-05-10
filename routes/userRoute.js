@@ -1,9 +1,13 @@
 import express from "express";
 import {
+  forgetVerify,
   insertUser,
+  loadForgotPassword,
   loadHome,
   loadRegister,
+  loadResetPassword,
   loadSignIn,
+  resetPassword,
   verifyMail,
   verifySignIn,
 } from "../controllers/userController.js";
@@ -42,14 +46,20 @@ app.use(
   session({ secret: sessionSecret, resave: false, saveUninitialized: false })
 );
 
-app.get("/signup",isLoggedOut, loadRegister);
-app.post("/signup", upload.single("image"),checkUserExists, insertUser);
+app.get("/signup", isLoggedOut, loadRegister);
+app.post("/signup", upload.single("image"), checkUserExists, insertUser);
 
-app.get("/",isLoggedOut, loadSignIn);
-app.get("/login",isLoggedOut, loadSignIn);
+app.get("/", isLoggedOut, loadSignIn);
+app.get("/login", isLoggedOut, loadSignIn);
 app.post("/login", verifySignIn);
 
-app.get("/home",isLoggedIn, loadHome);
+app.get("/forgotPassword", isLoggedOut, loadForgotPassword);
+app.post("/forgotPassword", forgetVerify);
+
+app.get("/resetPassword", loadResetPassword);
+app.post("/resetPassword", resetPassword);
+
+app.get("/home", isLoggedIn, loadHome);
 
 app.get("/verify", verifyMail);
 export default app;

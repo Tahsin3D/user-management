@@ -1,6 +1,7 @@
 import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
+import randomstring from "randomstring";
 
 const hashPassword = async (password) => {
   try {
@@ -146,11 +147,110 @@ const loadHome = async (req, res) => {
     console.log(error);
   }
 };
+
+// Forgot Password
+
+const loadForgotPassword = async (req, res) => {
+  try {
+    res.render("forgotPassword");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const sendForgotMail = async (name, email, token) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: "tahsin3194@gmail.com",
+        pass: "mxoz gnxc bttt kxya",
+      },
+    });
+    const mailOptions = {
+      from: "tahsin3194@gmail.com",
+      to: email,
+      subject: "For Resetting Password",
+      html:
+        "<p>Hi " +
+        name +
+        '! Please click here to reset your password: <a href="http://localhost:3000/resetPassword?token=' +
+        token +
+        '">Reset Password</a></p>',
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email has been sent: ", info.response);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const forgetVerify = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user)
+    return res.render("forgotPassword", { message: "Email does not exist!" });
+  if (!user.is_verified)
+    return res.render("forgotPassword", {
+      message: "Please varify your email first.",
+    });
+
+  const randomString = randomstring.generate();
+  const updatedUser = await User.findOneAndUpdate(
+    { email },
+    { $set: { token: randomString } },
+    { new: true }
+  );
+
+  if (updatedUser) {
+    sendForgotMail(updatedUser.name, updatedUser.email, updatedUser.token);
+    return res.render("login", { message: "Please check your mail." });
+  } else {
+    console.log("User not Updated");
+    return res.render("forgotPassword");
+  }
+};
+
+const loadResetPassword = async (req, res) => {
+  try {
+    res.render("resetPassword");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const token = req.query.token;
+  const {password} = req.body;
+
+  const hashedPassword = await hashPassword(password);
+
+  const user = await User.findOne({token});
+
+  if(!user) return res.redirect("/signup");
+
+  await User.findByIdAndUpdate({_id: user._id}, {$set: {password: hashedPassword}});
+  return res.redirect("/login");
+};
 export {
   loadRegister,
   loadSignIn,
   loadHome,
+  loadForgotPassword,
+  loadResetPassword,
   verifySignIn,
   insertUser,
   verifyMail,
+  forgetVerify,
+  resetPassword,
 };
