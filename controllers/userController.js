@@ -13,7 +13,7 @@ const hashPassword = async (password) => {
 };
 
 // For Email verification
-const sendVerifyMail = async (name, email, user_id) => {
+const sendVerifyMail = async (name, email, verificationCode) => {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -25,6 +25,7 @@ const sendVerifyMail = async (name, email, user_id) => {
         pass: "mxoz gnxc bttt kxya",
       },
     });
+
     const mailOptions = {
       from: "tahsin3194@gmail.com",
       to: email,
@@ -32,11 +33,15 @@ const sendVerifyMail = async (name, email, user_id) => {
       html:
         "<p>Hi " +
         name +
-        '! Please click here to verify your mail: <a href="http://localhost:3000/verify?id=' +
-        user_id +
-        '">Verify</a></p>',
+        "! Your verification code is " +
+        verificationCode +
+        "</p>",
     };
 
+    await User.findOneAndUpdate(
+      { email },
+      { $set: { token: verificationCode } }
+    );
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
@@ -49,14 +54,32 @@ const sendVerifyMail = async (name, email, user_id) => {
   }
 };
 
+const loadVerifyEmailPage = async (req, res) => {
+  try {
+    res.render("email-verification");
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const verifyMail = async (req, res) => {
   try {
-    const updateInfo = await User.updateOne(
-      { _id: req.query.id },
-      { $set: { is_verified: true } }
-    );
-    console.log(updateInfo);
-    res.render("email-verified");
+    const { code, email } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+      if (user.token === code) {
+        await User.findByIdAndUpdate(
+          { _id: user._id },
+          { $set: { is_verified: true } , $unset: {token: ""}},
+          { new: true }
+        );
+        res.redirect("/login");
+      } else {
+        res.render("email-verification", { message: "Code is incorrect" });
+      }
+    } else {
+      res.render("email-verification", { message: "Code is incorrect" });
+    }
   } catch (error) {
     console.log(error);
   }
@@ -91,8 +114,9 @@ const insertUser = async (req, res) => {
     const userData = await user.save();
 
     if (userData) {
-      sendVerifyMail(name, email, userData._id);
-      res.redirect("login");
+      const verificationCode = Math.floor(10000000 + Math.random() * 90000000);
+      sendVerifyMail(name, email, verificationCode);
+      res.redirect("/emailVerification");
     } else {
       res.render("registration", { message: "Registration Unsuccessful." });
     }
@@ -231,17 +255,21 @@ const loadResetPassword = async (req, res) => {
 
 const resetPassword = async (req, res) => {
   const token = req.query.token;
-  const {password} = req.body;
+  const { password } = req.body;
 
   const hashedPassword = await hashPassword(password);
 
-  const user = await User.findOne({token});
+  const user = await User.findOne({ token });
 
-  if(!user) return res.redirect("/signup");
+  if (!user) return res.redirect("/signup");
 
-  await User.findByIdAndUpdate({_id: user._id}, {$set: {password: hashedPassword}});
+  await User.findByIdAndUpdate(
+    { _id: user._id },
+    { $set: { password: hashedPassword } }
+  );
   return res.redirect("/login");
 };
+
 export {
   loadRegister,
   loadSignIn,
@@ -253,4 +281,5 @@ export {
   verifyMail,
   forgetVerify,
   resetPassword,
+  loadVerifyEmailPage,
 };

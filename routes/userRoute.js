@@ -7,6 +7,7 @@ import {
   loadRegister,
   loadResetPassword,
   loadSignIn,
+  loadVerifyEmailPage,
   resetPassword,
   verifyMail,
   verifySignIn,
@@ -61,5 +62,6 @@ app.post("/resetPassword", resetPassword);
 
 app.get("/home", isLoggedIn, loadHome);
 
-app.get("/verify", verifyMail);
+app.get("/emailVerification",isLoggedOut, loadVerifyEmailPage);
+app.post("/emailVerification", verifyMail);
 export default app;
