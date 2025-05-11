@@ -7,15 +7,14 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type:String,
-        required: true
+        required: true,
+        unique: true
     },
     mobile: {
         type:String,
-        required: true
     },
     image: {
         type:String,
-        required: true
     },
     password: {
         type:String,
@@ -23,10 +22,11 @@ const userSchema = new mongoose.Schema({
     },
     is_admin: {
         type:Boolean,
-        required: true
+        default: false,
     },
     is_verified: {
         type:Boolean,
+        default: false
     },
     token: {
         type: String,

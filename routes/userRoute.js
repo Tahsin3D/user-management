@@ -8,6 +8,7 @@ import {
   loadResetPassword,
   loadSignIn,
   loadVerifyEmailPage,
+  logout,
   resetPassword,
   verifyMail,
   verifySignIn,
@@ -61,6 +62,8 @@ app.get("/resetPassword", loadResetPassword);
 app.post("/resetPassword", resetPassword);
 
 app.get("/home", isLoggedIn, loadHome);
+
+app.get("/logout", isLoggedIn, logout);
 
 app.get("/emailVerification",isLoggedOut, loadVerifyEmailPage);
 app.post("/emailVerification", verifyMail);

@@ -1,5 +1,12 @@
 <% include("../header.ejs")%>
 
 <h2>Welcome Home</h2>
+<p> User: 
+    <%=
+        user.name
+    %>
+
+</p>
+<a href="/logout">Logout</a>
 
 <% include("../footer.ejs")%>
